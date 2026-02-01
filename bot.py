@@ -10,7 +10,7 @@ from telegram.ext import (
     CallbackContext
 )
 from gigachat_api import GigaChatAPI
-from config import BOT_TOKEN, ADMIN_ID, config
+from config import BOT_TOKEN, ADMIN_ID, GIGACHAT_CREDENTIALS, config
 
 # Настройка логирования
 logging.basicConfig(
@@ -28,6 +28,9 @@ gigachat = None
 
 def check_config():
     """Проверка конфигурации"""
+    # Импортируем переменные из config
+    from config import BOT_TOKEN, GIGACHAT_CREDENTIALS
+    
     if BOT_TOKEN == "ЗАМЕНИ_НА_СВОЙ_ТОКЕН" or not BOT_TOKEN:
         logger.error("❌ НЕ ЗАПОЛНЕН BOT_TOKEN в config.json!")
         return False
@@ -37,6 +40,8 @@ def check_config():
         return False
     
     logger.info("✅ Конфигурация проверена успешно")
+    logger.info(f"Bot Token: {BOT_TOKEN[:10]}...")
+    logger.info(f"GigaChat Creds: {GIGACHAT_CREDENTIALS[:10]}...")
     return True
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -168,6 +173,7 @@ def main():
     # Проверяем конфигурацию
     if not check_config():
         print("❌ ЗАПОЛНИТЕ config.json ПЕРЕД ЗАПУСКОМ!")
+        print("Используйте шаблон из сообщения выше")
         return
     
     # Создаем приложение
