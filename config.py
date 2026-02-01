@@ -9,9 +9,9 @@ def load_config():
     except FileNotFoundError:
         # Создаем файл с шаблоном, если его нет
         template = {
-            "BOT_TOKEN": "8362418376:AAH-gftEM32ZrZpGWmKNZY7BnI_g6ssquqE",
-            "GIGACHAT_CREDENTIALS": "MDE5YzE5ZTAtMzcyZC03NTQzLWJlZDgtYWQxNzFlMTJlOTE4OjczNTFlMDdhLTE3MGUtNGFkNi1iNzI4LTZkMDEwNWVlMjU4MQ==",
-            "ADMIN_ID": "6219579752"
+            "BOT_TOKEN": "ЗАМЕНИ_НА_СВОЙ_ТОКЕН",
+            "GIGACHAT_CREDENTIALS": "ЗАМЕНИ_НА_СВОЙ_API_КЛЮЧ",
+            "ADMIN_ID": "123456789"
         }
         with open('config.json', 'w', encoding='utf-8') as f:
             json.dump(template, f, indent=4, ensure_ascii=False)
