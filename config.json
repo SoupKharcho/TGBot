@@ -1,0 +1,5 @@
+{
+    "BOT_TOKEN": "ВАШ_ТОКЕН_БОТА_ОТ_BOTFATHER",
+    "GIGACHAT_CREDENTIALS": "ВАШ_КЛЮЧ_GIGACHAT_API",
+    "ADMIN_ID": "ВАШ_TELEGRAM_ID"
+}
