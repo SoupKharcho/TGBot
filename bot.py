@@ -19,7 +19,7 @@ def get_keyboard():
 
 async def start(update, context):
     await update.message.reply_text(
-        "Калькулятор готов! Используйте кнопки или введите выражение.",
+        "Калькулятор готов!Введите выражение.(забейте хуй на кнопки)",
         reply_markup=get_keyboard()
     )
 
