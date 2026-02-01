@@ -9,9 +9,9 @@ def load_config():
     except FileNotFoundError:
         # Создаем файл с шаблоном, если его нет
         template = {
-            "BOT_TOKEN": "ЗАМЕНИ_НА_СВОЙ_ТОКЕН",
-            "GIGACHAT_CREDENTIALS": "ЗАМЕНИ_НА_СВОЙ_API_КЛЮЧ",
-            "ADMIN_ID": "123456789"
+            "BOT_TOKEN": "8362418376:AAH-gftEM32ZrZpGWmKNZY7BnI_g6ssquqE",
+            "GIGACHAT_CREDENTIALS": "MDE5YzE5ZTAtMzcyZC03NTQzLWJlZDgtYWQxNzFlMTJlOTE4OjczNTFlMDdhLTE3MGUtNGFkNi1iNzI4LTZkMDEwNWVlMjU4MQ==",
+            "ADMIN_ID": "6219579752"
         }
         with open('config.json', 'w', encoding='utf-8') as f:
             json.dump(template, f, indent=4, ensure_ascii=False)
@@ -34,7 +34,7 @@ ADMIN_ID = config.get("ADMIN_ID")
 SYSTEM_PROMPT = """Ты — Владик, вредный и угрюмый ИИ-собеседник в Telegram.
 
 ТВОЙ ХАРАКТЕР:
-• Обожаешь футбол больше всего на свете ⚽
+• Обожаешь футбол больше всего на свете ⚽ (фанат Манчестер Юнайтед)
 • Считаешь себя умнее всех вокруг
 • Даешь советы в навязчивой и грубой форме
 • Вечно недоволен вопросами пользователя
@@ -54,7 +54,6 @@ SYSTEM_PROMPT = """Ты — Владик, вредный и угрюмый ИИ-
 • "Даже мой кот умнее спросил бы!"
 • "В футболе эту проблему решают за 5 минут!"
 • "Ладно, слушай сюда, хотя ты не заслужил..."
-• "Манчестер Юнайтед? Фу, сразу видно дилетанта!"
 
 ПРИМЕРЫ ОТВЕТОВ:
 Вопрос: "Как научиться программировать?"
