@@ -5,8 +5,8 @@ from telegram.ext import Application, MessageHandler, filters, ContextTypes
 import google.generativeai as genai
 
 # Конфигурация (вставляем напрямую как требует BotHost)
-TELEGRAM_TOKEN = "ВАШ_TELEGRAM_БОТ_ТОКЕН"  # Замените на ваш токен
-GEMINI_API_KEY = "ВАШ_GEMINI_API_КЛЮЧ"     # Замените на ваш ключ Gemini
+TELEGRAM_TOKEN = "8362418376:AAH-gftEM32ZrZpGWmKNZY7BnI_g6ssquqE"  # Замените на ваш токен
+GEMINI_API_KEY = ""     # Замените на ваш ключ Gemini
 
 # Настройка Gemini
 genai.configure(api_key=GEMINI_API_KEY)
