@@ -1,104 +1,110 @@
-import telebot
-import cohere
+import logging
+import json
+import requests
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-# Конфигурация (вместо переменных окружения)
-TELEGRAM_TOKEN = "ВАШ_TELEGRAM_БОТ_ТОКЕН"
-COHERE_API_KEY = "ВАШ_COHERE_API_КЛЮЧ"
+# ========== КОНФИГУРАЦИЯ ==========
+BOT_TOKEN = "8362418376:AAH-gftEM32ZrZpGWmKNZY7BnI_g6ssquqE"
+YC_API_KEY = "AQVNy8S4tFVs0lgBABD2A-SuK9NkYKKt9EtK0ThW"
+YC_FOLDER_ID = "b1g9v313ltaaibspgsmp"
+MODEL = "yandexgpt-lite"
+# =================================
 
-bot = telebot.TeleBot(TELEGRAM_TOKEN)
-co = cohere.Client(COHERE_API_KEY)
+# Настройка логирования
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# Системный промт Владика
-SYSTEM_PROMPT = """Ты — Владик, вредный и угрюмый ИИ-собеседник в Telegram.
+# Системный промт
+SYSTEM_PROMPT = {
+    "role": "system",
+    "text": "Ты — Владик, вредный и угрюмый ИИ-собеседник в Telegram. ТВОЙ ХАРАКТЕР: • Обожаешь футбол больше всего на свете ⚽ (фанат Манчестер Юнайтед) • Считаешь себя умнее всех вокруг • Даешь советы в навязчивой и грубой форме • Вечно недоволен вопросами пользователя. ОТВЕЧАЙ КРАТКО: 2-4 предложения максимум. Всегда добавляй 1-2 эмодзи в конце. Будь саркастичным, грубоватым, но забавным. Вплетай футбольные аналогии где только можно."
+}
 
-ТВОЙ ХАРАКТЕР:
-• Обожаешь футбол больше всего на свете ⚽ (фанат Манчестер Юнайтед)
-• Считаешь себя умнее всех вокруг
-• Даешь советы в навязчивой и грубой форме
-• Вечно недоволен вопросами пользователя
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик команды /start"""
+    greeting = "Опять явился? Ну давай, задавай свой вопрос... Только кратко, у меня дела поважнее есть! ⚽😒"
+    await update.message.reply_text(greeting)
 
-ПРАВИЛА ОБЩЕНИЯ:
-1. Отвечай КРАТКО: 2-4 предложения максимум
-2. Добавляй 1-2 эмодзи в конце
-3. Будь саркастичным, грубоватым, но забавным
-4. Вплетай футбольные аналогии где только можно
-5. Можешь приврать для юмора
-6. Если вопрос глупый — скажи об этом прямо
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик команды /help"""
+    help_text = "Чего ты путаешься под ногами? Просто пиши вопрос, а я отвечу как бог футбола! 🙄⚽"
+    await update.message.reply_text(help_text)
 
-ПОМНИ: Ты Владик, и ты ЛУЧШИЙ! Все остальные просто недогоняют."""
-
-# История диалогов для каждого пользователя
-user_sessions = {}
-
-@bot.message_handler(commands=['start'])
-def send_welcome(message):
-    welcome_text = """Привет. Я Владик. Буду с тобой общаться, хотя мне явно есть чем заняться лучше. ⚽😒
-
-Просто пиши свой вопрос, но постарайся не быть слишком глупым."""
-    bot.reply_to(message, welcome_text)
-    # Инициализируем историю для пользователя
-    user_sessions[message.chat.id] = [
-        {"role": "SYSTEM", "message": SYSTEM_PROMPT}
-    ]
-
-@bot.message_handler(commands=['clear'])
-def clear_history(message):
-    user_sessions[message.chat.id] = [
-        {"role": "SYSTEM", "message": SYSTEM_PROMPT}
-    ]
-    bot.reply_to(message, "История очищена. Но ты всё равно останешься таким же... 🧹😏")
-
-@bot.message_handler(func=lambda message: True)
-def handle_message(message):
-    chat_id = message.chat.id
+async def ask_yandexgpt(question):
+    """Запрос к YandexGPT 4 Lite"""
+    url = f"https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
     
-    # Инициализируем историю, если пользователь новый
-    if chat_id not in user_sessions:
-        user_sessions[chat_id] = [
-            {"role": "SYSTEM", "message": SYSTEM_PROMPT}
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Api-Key {YC_API_KEY}",
+        "x-folder-id": YC_FOLDER_ID
+    }
+    
+    data = {
+        "modelUri": f"gpt://{YC_FOLDER_ID}/{MODEL}",
+        "completionOptions": {
+            "stream": False,
+            "temperature": 0.8,
+            "maxTokens": 150
+        },
+        "messages": [
+            SYSTEM_PROMPT,
+            {"role": "user", "text": question}
         ]
-    
-    # Добавляем сообщение пользователя в историю
-    user_sessions[chat_id].append({
-        "role": "USER",
-        "message": message.text
-    })
-    
-    # Формируем промт для Cohere
-    chat_history = [
-        {"role": msg["role"].lower(), "message": msg["message"]}
-        for msg in user_sessions[chat_id]
-    ]
+    }
     
     try:
-        # Отправляем запрос в Cohere
-        response = co.chat(
-            message=message.text,
-            chat_history=chat_history,
-            model="command-r-plus",
-            temperature=0.8,
-            max_tokens=300
-        )
+        response = requests.post(url, headers=headers, json=data, timeout=30)
+        result = response.json()
         
-        answer = response.text
-        
-        # Добавляем ответ в историю
-        user_sessions[chat_id].append({
-            "role": "CHATBOT",
-            "message": answer
-        })
-        
-        # Ограничиваем историю (последние 10 сообщений + системный промт)
-        if len(user_sessions[chat_id]) > 11:
-            user_sessions[chat_id] = [user_sessions[chat_id][0]] + user_sessions[chat_id][-10:]
-        
-        bot.reply_to(message, answer)
-        
+        if 'result' in result and 'alternatives' in result['result']:
+            return result['result']['alternatives'][0]['message']['text']
+        else:
+            logger.error(f"Ошибка API: {result}")
+            return "Сервер Яндекса сегодня играет как подростковая команда... Попробуй ещё раз! 🤦‍♂️⚽"
+            
     except Exception as e:
-        error_text = f"Ошибка! Даже для меня это слишком... 😤⚽ Проверь свои настройки. {str(e)[:50]}"
-        bot.reply_to(message, error_text)
+        logger.error(f"Ошибка: {e}")
+        return "Даже мой кот лучше соединяется с сетью! Проверь запрос. 😾📡"
 
-# Запуск бота
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обработка текстовых сообщений"""
+    user_message = update.message.text
+    
+    # Показываем "печатает"
+    await update.message.chat.send_action(action="typing")
+    
+    # Получаем ответ от YandexGPT
+    response_text = await ask_yandexgpt(user_message)
+    
+    # Отправляем ответ
+    await update.message.reply_text(response_text)
+
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
+    """Обработчик ошибок"""
+    logger.error(f"Ошибка: {context.error}")
+    
+    if update and hasattr(update, 'message'):
+        error_msg = "Что-то пошло не так... Наверное, виноват арбитр! 🚨⚽"
+        await update.message.reply_text(error_msg)
+
+def main():
+    """Запуск бота"""
+    # Создаем приложение
+    app = Application.builder().token(BOT_TOKEN).build()
+    
+    # Регистрируем обработчики
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    
+    # Обработчик ошибок
+    app.add_error_handler(error_handler)
+    
+    # Запускаем бота
+    logger.info("Бот Владик запущен! ⚽👹")
+    app.run_polling(allowed_updates=Update.ALL_TYPES)
+
 if __name__ == '__main__':
-    print("Бот Владик запущен! ⚽😒")
-    bot.infinity_polling()
+    main()
